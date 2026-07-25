@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumix - Modern Interactive Resume Builder</title>
+  <meta name="description"
+    content="Build stunning, professional resumes in minutes with live preview and instant PDF download. Choose between monochrome classic and vibrant modern creative designs.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- App Styling -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <!-- html2pdf Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Auth Styling -->
+  <link rel="stylesheet" href="auth.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i class="fa-solid fa-file-invoice"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Resumix</h1>
+          <span class="badge">Pro Builder</span>
+        </div>
+      </div>
+
+      <!-- Template Selector Pill -->
+      <div class="template-selector">
+        <span class="selector-label"><i class="fa-solid fa-palette"></i> Template Style:</span>
+        <div class="template-toggle-group">
+          <button type="button" class="template-btn active" data-template="modern" id="btnTemplateModern">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Modern Creative (Blue)
+          </button>
+          <button type="button" class="template-btn" data-template="classic" id="btnTemplateClassic">
+            <i class="fa-solid fa-align-left"></i> Classic Plain (Monochrome)
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="header-actions">
+        <button type="button" class="btn btn-secondary" id="btnLoadDemo" title="Fill form with sample data">
+          <i class="fa-solid fa-bolt"></i> Sample Data
+        </button>
+        <button type="button" class="btn btn-outline-danger" id="btnClearForm" title="Clear all fields">
+          <i class="fa-solid fa-trash-can"></i> Reset
+        </button>
+        <button type="button" class="btn btn-primary d-none" id="btnSaveResume">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Save Resume
+        </button>
+        <button type="button" class="btn btn-primary" id="btnDownloadPdf">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Form Editor (Left) & Live Preview (Right) -->
+    <main class="workspace">
+      <!-- Left Panel: Form Input Editor -->
+      <aside class="editor-pane">
+        <div class="pane-header">
+          <h2><i class="fa-solid fa-pen-to-square"></i> Resume Details</h2>
+          <p>Fill in your details below. Preview updates instantly.</p>
+        </div>
+
+        <div class="accordion-list">
+
+          <!-- Section 1: Personal Details -->
+          <div class="accordion-item open">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-user-gear"></i> Personal Details</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div class="photo-upload-box">
+                <div class="photo-preview" id="photoPreview">
+                  <i class="fa-solid fa-camera placeholder-icon"></i>
+                </div>
+                <div class="photo-controls">
+                  <div class="photo-btn-group">
+                    <label for="inputPhoto" class="btn btn-sm btn-secondary">
+                      <i class="fa-solid fa-upload"></i> Upload
+                    </label>
+                    <input type="file" id="inputPhoto" accept="image/*" class="d-none">
+                    <button type="button" class="btn btn-sm btn-secondary d-none" id="btnEditPhoto">
+                      <i class="fa-solid fa-sliders"></i> Adjust Photo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger d-none" id="btnRemovePhoto">
+                      <i class="fa-solid fa-xmark"></i> Remove
+                    </button>
+                  </div>
+                  <span class="help-text">JPG/PNG image (Adjust zoom & position below)</span>
+                </div>
+              </div>
+
+              <!-- Photo Adjustment Drawer -->
+              <div class="photo-adjust-panel d-none" id="photoAdjustPanel">
+                <div class="adjust-header">
+                  <span><i class="fa-solid fa-sliders"></i> Photo Adjustments</span>
+                  <button type="button" class="close-adjust-btn" id="btnCloseAdjust"><i
+                      class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="adjust-row">
+                  <label for="photoZoom"><i class="fa-solid fa-magnifying-glass"></i> Zoom:</label>
+                  <input type="range" id="photoZoom" min="50" max="250" value="100" class="range-slider">
+                  <span class="adjust-val" id="photoZoomVal">100%</span>
+                </div>
+                <div class="adjust-row">
+                  <label for="photoOffsetY"><i class="fa-solid fa-arrows-up-down"></i> Vert (Y):</label>
+                  <input type="range" id="photoOffsetY" min="-60" max="60" value="0" class="range-slider">
+                </div>
+                <div class="adjust-row">
+                  <label for="photoOffsetX"><i class="fa-solid fa-arrows-left-right"></i> Horiz (X):</label>
+                  <input type="range" id="photoOffsetX" min="-60" max="60" value="0" class="range-slider">
+                </div>
+                <div class="adjust-actions">
+                  <button type="button" class="btn btn-sm btn-secondary" id="btnRotatePhoto">
+                    <i class="fa-solid fa-rotate-right"></i> Rotate 90°
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger" id="btnResetPhotoAdjust">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="fullName">Full Name *</label>
+                  <input type="text" id="fullName" placeholder="e.g. Md Majid" class="form-control">
+                </div>
+                <div class="form-group full-width">
+                  <label for="jobTitle">Job Title / Target Role *</label>
+                  <input type="text" id="jobTitle" placeholder="e.g. Senior AI Full Stack Developer"
+                    class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="email">Email Address *</label>
+                  <input type="email" id="email" placeholder="khanmdmajid161@gmail.com" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone Number *</label>
+                  <input type="tel" id="phone" placeholder="(+91) 7004624465" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="location">Location (City, Country)</label>
+                  <input type="text" id="location" placeholder="Delhi,India" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="website">Portfolio / Website</label>
+                  <input type="text" id="website" placeholder="majid.netlify.app" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="linkedin">LinkedIn Profile</label>
+                  <input type="text" id="linkedin" placeholder="linkedin.com/in/mdmajid" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="github">GitHub Profile</label>
+                  <input type="text" id="github" placeholder="github.com/mdmajid" class="form-control">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Summary -->
+          <div class="accordion-item open">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-align-left"></i> Professional Summary</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group full-width">
+                <label for="summary">Professional Overview</label>
+                <textarea id="summary" rows="4" class="form-control"
+                  placeholder="Write 2-4 sentences highlighting your core background, accomplishments, and value proposition..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Work Experience -->
+          <div class="accordion-item open">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-briefcase"></i> Work Experience</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div id="experienceList" class="dynamic-list"></div>
+              <button type="button" class="btn btn-secondary btn-block mt-2" id="btnAddExperience">
+                <i class="fa-solid fa-plus"></i> Add Work Experience
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 4: Education -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-graduation-cap"></i> Education</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div id="educationList" class="dynamic-list"></div>
+              <button type="button" class="btn btn-secondary btn-block mt-2" id="btnAddEducation">
+                <i class="fa-solid fa-plus"></i> Add Education
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 5: Skills -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-screwdriver-wrench"></i> Skills & Expertise</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div id="skillsList" class="dynamic-list"></div>
+              <button type="button" class="btn btn-secondary btn-block mt-2" id="btnAddSkill">
+                <i class="fa-solid fa-plus"></i> Add Skill
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 6: Key Projects -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-diagram-project"></i> Key Projects</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div id="projectsList" class="dynamic-list"></div>
+              <button type="button" class="btn btn-secondary btn-block mt-2" id="btnAddProject">
+                <i class="fa-solid fa-plus"></i> Add Project
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 7: Certifications & Languages -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span><i class="fa-solid fa-certificate"></i> Certifications & Languages</span>
+              <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group full-width">
+                <label for="certifications">Certifications (comma or line separated)</label>
+                <textarea id="certifications" rows="2" class="form-control"
+                  placeholder="AWS Certified Solutions Architect, Certified Scrum Master..."></textarea>
+              </div>
+              <div class="form-group full-width mt-3">
+                <label for="languages">Languages (comma separated)</label>
+                <input type="text" id="languages" placeholder="English , Hindi, Urdu" class="form-control">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Right Panel: Live Document Preview -->
+      <section class="preview-pane">
+        <div class="preview-toolbar">
+          <div class="preview-title">
+            <i class="fa-solid fa-eye"></i>
+            <span>Live Document Preview</span>
+          </div>
+          <div class="preview-controls">
+            <button type="button" class="zoom-btn" id="btnZoomOut" title="Zoom Out"><i
+                class="fa-solid fa-minus"></i></button>
+            <span class="zoom-level" id="zoomLevelText">100%</span>
+            <button type="button" class="zoom-btn" id="btnZoomIn" title="Zoom In"><i
+                class="fa-solid fa-plus"></i></button>
+            <button type="button" class="zoom-btn" id="btnZoomReset" title="Reset Zoom"><i
+                class="fa-solid fa-rotate-left"></i></button>
+          </div>
+        </div>
+
+        <!-- Document Viewer Container -->
+        <div class="document-viewport">
+          <div class="paper-page" id="resumeDocument">
+            <!-- Dynamic Content rendered by JavaScript -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Dashboard Modal -->
+  <div class="auth-overlay" id="dashboardOverlay">
+    <div class="auth-modal dashboard-modal" style="max-width: 800px; width: 90%;">
+      <button type="button" class="auth-close-btn" id="dashboardCloseBtn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="auth-modal-header">
+        <h2 class="auth-title"><i class="fa-solid fa-layer-group"></i> My Dashboard</h2>
+        <p class="auth-subtitle">Manage your saved resumes</p>
+      </div>
+
+      <div class="dashboard-content">
+        <div id="dashboardLoading" class="text-center py-4">
+          <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+          <p>Loading your resumes...</p>
+        </div>
+        <div id="dashboardEmpty" class="text-center py-4 d-none">
+          <i class="fa-solid fa-folder-open fa-3x" style="color: #64748b; margin-bottom: 15px;"></i>
+          <p>You haven't saved any resumes yet.</p>
+        </div>
+        <div id="dashboardList" class="dashboard-grid d-none">
+          <!-- Resume cards will be inserted here dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="app.js"></script>
+  <script src="auth.js"></script>
+</body>
+
+</html>
