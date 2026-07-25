@@ -1184,3 +1184,83 @@ textarea.form-control {
   background: var(--danger);
   color: var(--white);
 }
+
+/* ==========================================================================
+   Responsive & Mobile Styles
+   ========================================================================== */
+@media screen and (max-width: 900px) {
+  .app-header {
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+  }
+  
+  .template-selector {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Stack workspace vertically on mobile */
+  .workspace {
+    flex-direction: column-reverse;
+    overflow-y: auto;
+  }
+  
+  /* Editor becomes bottom half (or bottom block) */
+  .editor-pane {
+    width: 100%;
+    min-width: unset;
+    height: auto;
+    border-right: none;
+    border-top: 2px solid var(--gray-300);
+    flex: none;
+  }
+  
+  /* Preview pane top half */
+  .preview-pane {
+    width: 100%;
+    min-height: 60vh;
+    flex: none;
+  }
+  
+  .document-viewport {
+    padding: 1rem;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Auth user badge adjustments */
+  .auth-user-badge .user-email-text {
+    display: none; /* hide email on very small screens to save space */
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .logo-text h1 {
+    font-size: 1.1rem;
+  }
+  
+  .logo-text .badge {
+    display: none;
+  }
+  
+  .btn span {
+    display: none; /* Hide button text, keep icons on tiny screens */
+  }
+  
+  .btn-load span, .btn-primary span {
+    display: inline; /* Except for important ones */
+  }
+}
